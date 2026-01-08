@@ -1,364 +1,288 @@
-# AuraHealth - Intelligent Patient Continuity Engine
+# 🏥 AuraHealth - Privacy-First Patient Continuity Engine
 
-**Phase 1: Security Infrastructure** ✅
+> **MedTech Hackathon 2026** | Smart Medication Adherence Platform
 
-## 🎯 Project Vision
-AuraHealth bridges the "Data Black Hole" between clinic visits by digitizing prescriptions, automating medication management, and creating a "Digital Twin" for seamless patient-pharmacy-hospital data flow.
+[![Python 3.14+](https://img.shields.io/badge/python-3.14+-blue.svg)](https://python.org)
+[![Flask](https://img.shields.io/badge/flask-3.0+-green.svg)](https://flask.palletsprojects.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 🏗️ Architecture (Phase 1 Complete)
+---
 
-### 1. **Secrets Management** - HashiCorp Vault
-- ✅ `hvac` Python wrapper implementation
-- ✅ AppRole authentication
-- ✅ Dynamic database credential rotation (24h expiry)
-- ✅ Mock mode for development
+## 🎯 The Problem
 
-### 2. **Row-Level Encryption** - AES-256-GCM
-- ✅ User-specific key derivation with PBKDF2
-- ✅ Master key stored in Vault
-- ✅ Authenticated encryption (tamper detection)
-- ✅ 96-bit IV + 128-bit auth tag
+There's a **"Data Black Hole"** between the clinic and home:
+- Patients fail to adhere to prescriptions due to complex schedules
+- Inventory blindness leads to running out of critical medications
+- Medical history remains fragmented across hospitals
 
-### 3. **Database Sharding** - PostgreSQL
-- ✅ Hash-based routing: `hash(user_id) % 2`
-- ✅ Connection pooling per shard
-- ✅ Shard consistency validation
+## 💡 The Solution
 
-### 4. **DDoS Protection** - Flask-Limiter + Redis
-- ✅ Rate limiting: 10 req/sec, 100 req/min
-- ✅ IP-based tracking
-- ✅ Memory fallback for development
+AuraHealth is a **Privacy-First Longitudinal Patient Continuity Engine** that:
+- Digitizes paper prescriptions via OCR
+- Automates medication tracking and refill alerts
+- Synthesizes a "Health Digital Twin" for long-term insights
 
-## 📁 Project Structure
-```
-app/
-├── core/
-│   ├── vault_client.py      # Vault integration
-│   ├── security.py           # AES-256-GCM encryption
-│   └── __init__.py
-├── database/
-│   ├── connection.py         # Connection pooling
-│   ├── router.py             # Sharding logic
-│   └── __init__.py
-├── models/
-│   ├── patient.py            # Patient data models
-│   └── __init__.py
-├── services/
-│   ├── patient_service.py    # Business logic
-│   └── __init__.py
-├── routers/
-│   ├── patient_router.py     # REST API endpoints
-│   └── __init__.py
-└── main.py                   # Flask app entry point
+---
 
-tests/
-└── test_security.py          # Unit tests
+## ✨ Features Implemented
 
-database_schema.sql           # PostgreSQL schema
-requirements.txt              # Dependencies
-.env.example                  # Configuration template
-```
+### Phase 1: Security & Infrastructure ✅
+| Feature | Status | Description |
+|---------|--------|-------------|
+| AES-256-GCM Encryption | ✅ | Row-level encryption with per-user key derivation |
+| Database Sharding | ✅ | Horizontal sharding by User_UUID using SHA-256 hash |
+| Rate Limiting | ✅ | Flask-Limiter with configurable thresholds |
+| Secrets Management | ✅ | Environment-based config (hackathon-friendly) |
+
+### Phase 2: Vision-AI & Predictive Inventory ✅
+| Feature | Status | Description |
+|---------|--------|-------------|
+| OCR Service | ✅ | OpenCV + Tesseract with deskewing & preprocessing |
+| Medical NER | ✅ | Extracts drug name, strength, frequency, duration |
+| Frequency Parsing | ✅ | Supports BID, TID, QD, 1-0-1, QHS formats |
+| Inventory Calculation | ✅ | `Total Pills = Doses/Day × Duration` |
+| Dynamic Tracking | ✅ | TAKEN (-1), MISSED (log only), LOST (manual) |
+| Refill Alerts | ✅ | Auto-generate WhatsApp links when stock < 20% |
+
+### Phase 3: Digital Twin & Geo-Intelligence ✅
+| Feature | Status | Description |
+|---------|--------|-------------|
+| Health Digital Twin | ✅ | Chronic condition detection (≥3 prescriptions = chronic) |
+| Clinical Summary | ✅ | Gemini AI-powered patient summaries |
+| Risk Levels | ✅ | HIGH (<70%), MEDIUM (70-85%), LOW (>85%) adherence |
+| Hospital Discovery | ✅ | Google Maps Places API integration |
+| Web Scraper | ✅ | BeautifulSoup for OPD timings, departments |
+| Voice Service | ✅ | Twilio Voice API integration |
+
+### Phase 4: Interface (Backend Ready) ⏳
+| Feature | Status | Description |
+|---------|--------|-------------|
+| REST API | ✅ | All endpoints implemented and tested |
+| Frontend | ⏳ | Backend-only for security (Phase 4 pending) |
+
+---
 
 ## 🚀 Quick Start
 
-### 1. Install Dependencies
+### Prerequisites
+- Python 3.14+
+- Tesseract OCR (for prescription scanning)
+- PostgreSQL (optional, runs in mock mode)
+
+### Installation
+
 ```bash
+# Clone the repository
+cd "/Users/gopal/Version 1"
+
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
-```
 
-### 2. Configure Environment
-```bash
+# Copy environment template
 cp .env.example .env
-# Edit .env and set MOCK_MODE=true for development
+
+# Run the application
+PYTHONPATH=. python3 -m app.main
 ```
 
-### 3. Run Application (Mock Mode)
-```bash
-python -m app.main
-```
+The API will be available at `http://localhost:5000`
 
-The API will start on `http://localhost:5000`
+> **Note:** If port 5000 is busy (macOS AirPlay), run on port 5001:
+> ```bash
+> PYTHONPATH=. python3 -c "from app.main import create_app; app = create_app(); app.run(port=5001)"
+> ```
 
-### 4. Run Tests
-```bash
-python -m pytest tests/test_security.py -v
-```
+---
 
-## 🔒 Security Features
+## 🔐 API Keys Configuration
 
-### ✅ Phase 1 Acceptance Criteria
-- [x] No secret keys in `.env` or code (all from Vault)
-- [x] Database queries routed to shards based on `hash(user_id)`
-- [x] Patient data unreadable without Vault-stored master key
-- [x] Rate limiting blocks excessive requests (10/sec, 100/min)
+### Required API Keys
+
+| Service | Where to Get | Environment Variable |
+|---------|--------------|---------------------|
+| **Gemini AI** | [Google AI Studio](https://aistudio.google.com/app/apikey) | `GEMINI_API_KEY` |
+| **Google Maps** | [Google Cloud Console](https://console.cloud.google.com/apis/credentials) | `GOOGLE_MAPS_API_KEY` |
+| **Twilio** | [Twilio Console](https://console.twilio.com) | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` |
+
+### Setup Instructions
+
+1. **Copy the template:**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Edit `.env` with your API keys:**
+   ```bash
+   nano .env   # or use any text editor
+   ```
+
+3. **Required fields:**
+   ```env
+   # Google Gemini (Free tier available)
+   GEMINI_API_KEY=your_actual_api_key
+   GEMINI_MODEL=gemini-1.5-flash
+   
+   # Google Maps (Enable Places API)
+   GOOGLE_MAPS_API_KEY=your_actual_api_key
+   
+   # Twilio (For SMS/Voice/WhatsApp)
+   TWILIO_ACCOUNT_SID=your_account_sid
+   TWILIO_AUTH_TOKEN=your_auth_token
+   TWILIO_PHONE_NUMBER=+1234567890
+   
+   # Encryption (CHANGE THIS!)
+   MASTER_ENCRYPTION_KEY=generate_random_32_char_string
+   ```
+
+4. **Generate a secure encryption key:**
+   ```bash
+   python3 -c "import secrets; print(secrets.token_urlsafe(24))"
+   ```
+
+### ⚠️ Security Notes
+
+- **NEVER commit `.env` to git** - it's in `.gitignore`
+- **Mock Mode:** Set `MOCK_MODE=true` to run without real APIs
+- The `.env.example` file contains **only placeholder values**
+
+---
 
 ## 📡 API Endpoints
 
-### Create Patient
-```bash
-POST /api/patients/
-Content-Type: application/json
+### Core Endpoints
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/` | API status |
+| GET | `/health` | Health check |
 
-{
-  "name": "John Doe",
-  "medical_history": "No known allergies. Previous surgery in 2020."
-}
-```
+### Patient Management
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/patients/` | Create new patient |
+| GET | `/api/patients/<id>` | Get patient details |
+| PUT | `/api/patients/<id>` | Update patient |
 
-### Get Patient
-```bash
-GET /api/patients/{patient_id}
-```
+### Prescription OCR
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/prescriptions/upload` | Upload & OCR prescription image |
+| GET | `/api/prescriptions/<id>` | Get prescription details |
+| POST | `/api/prescriptions/<id>/confirm` | Confirm OCR & create medications |
 
-### Update Patient
-```bash
-PUT /api/patients/{patient_id}
-Content-Type: application/json
+### Medication Tracking
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/medications/<patient_id>` | List patient medications |
+| POST | `/api/medications/<id>/take` | Log medication taken |
+| POST | `/api/medications/<id>/miss` | Log missed dose |
+| GET | `/api/medications/<id>/refill-link` | Get WhatsApp refill link |
 
-{
-  "name": "Jane Doe",
-  "medical_history": "Updated history"
-}
-```
+### Digital Twin
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/digital_twin/<patient_id>` | Get patient's Digital Twin |
+| GET | `/api/digital_twin/<patient_id>/summary` | AI-generated clinical summary |
 
-### Health Check
-```bash
-GET /health
-```
-
-## 🧪 Testing Encryption
-
-```python
-from app.core.vault_client import init_vault
-from app.core.security import init_encryption
-
-# Initialize
-vault = init_vault(mock_mode=True)
-encryption = init_encryption(vault.get_master_encryption_key())
-
-# Encrypt
-user_id = "550e8400-e29b-41d4-a716-446655440000"
-encrypted = encryption.encrypt("Sensitive Data", user_id)
-
-# Decrypt
-decrypted = encryption.decrypt(encrypted, user_id)
-```
-
-## 📊 Database Setup (Production)
-
-```bash
-# Shard 0
-createdb aurahealth_shard0
-psql aurahealth_shard0 < database_schema.sql
-
-# Shard 1
-createdb aurahealth_shard1
-psql aurahealth_shard1 < database_schema.sql
-```
-
-## 🔐 Vault Setup (Production)
-
-```bash
-# Enable KV secrets engine
-vault secrets enable -path=database kv-v2
-vault secrets enable -path=api kv-v2
-
-# Store master key
-vault kv put database/master_key value="your-32-byte-key"
-
-# Store database credentials
-vault kv put database/shard0 \
-  username=postgres \
-  password=<password> \
-  host=localhost \
-  port=5432 \
-  database=aurahealth_shard0
-```
-
+### Hospital Discovery
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/hospitals/nearby` | Find nearby hospitals |
+| GET | `/api/hospitals/<place_id>/details` | Get hospital details (scraped) |
 
 ---
 
-## 🚀 Phase 2: OCR & Intelligence Layer ✅
+## 🧪 Running Tests
 
-### Features Implemented
+```bash
+source venv/bin/activate
+python3 -m pytest tests/ -v
+```
 
-#### 1. **Vision-AI Pipeline**
-- OpenCV preprocessing (noise reduction, deskewing, CLAHE, adaptive thresholding)
-- Tesseract OCR with layout-aware extraction
-- Regex-based structured data extraction
-
-#### 2. **Semantic Parser**
-- 30+ medical abbreviation mappings (QD, BID, TID, 1-0-1, etc.)
-- Automatic inventory calculation
-- Dosage extraction from text
-
-#### 3. **Predictive Inventory Engine**
-- Real-time pill counter
-- Adherence event tracking (TAKEN, MISSED, WASTAGE, REFILL)
-- Automated refill alerts
-- Adherence rate calculation
-
-#### 4. **Procurement Bridge**
-- WhatsApp deep link generation
-- Twilio SMS integration (with mock mode)
-- Automated pharmacy communication
+Expected output: **46 tests passed**
 
 ---
 
-## 📡 Phase 2 API Endpoints
+## 📁 Project Structure
 
-### Prescription Management
-
-#### Upload & OCR
-```bash
-POST /api/prescriptions/upload
-Content-Type: application/json
-
-{
-  "patient_id": "550e8400-e29b-41d4-a716-446655440000",
-  "image": "<base64-encoded-image>"
-}
 ```
-
-#### Confirm OCR Results
-```bash
-POST /api/prescriptions/{prescription_id}/confirm
-Content-Type: application/json
-
-{
-  "patient_id": "...",
-  "medications": [
-    {
-      "drug_name": "Paracetamol",
-      "strength": "500mg",
-      "frequency": "BID",
-      "duration_days": 10,
-      "dosage_per_intake": 1
-    }
-  ],
-  "pharmacy_name": "ABC Pharmacy",
-  "pharmacy_phone": "9876543210"
-}
-```
-
-### Medication Adherence
-
-#### List Medications
-```bash
-GET /api/medications/?patient_id=...
-```
-
-#### Mark as Taken
-```bash
-POST /api/medications/{medication_id}/taken
-Content-Type: application/json
-
-{
-  "patient_id": "...",
-  "scheduled_time": "2026-01-08T09:00:00",
-  "pills_count": 1
-}
-```
-
-#### Mark as Missed
-```bash
-POST /api/medications/{medication_id}/missed
-Content-Type: application/json
-
-{
-  "patient_id": "...",
-  "scheduled_time": "2026-01-08T09:00:00"
-}
-```
-
-#### Record Wastage
-```bash
-POST /api/medications/{medication_id}/wastage
-Content-Type: application/json
-
-{
-  "patient_id": "...",
-  "pills_count": 2
-}
-```
-
-#### Record Refill
-```bash
-POST /api/medications/{medication_id}/refill
-Content-Type: application/json
-
-{
-  "patient_id": "...",
-  "pills_count": 30
-}
-```
-
-#### Get Refill Alerts
-```bash
-GET /api/medications/refill-alerts?patient_id=...
-
-Response:
-{
-  "count": 2,
-  "medications": [
-    {
-      "medication_id": "...",
-      "drug_name": "Aspirin",
-      "pills_remaining": 3,
-      "whatsapp_url": "https://wa.me/...",
-      "pills_needed": 27
-    }
-  ]
-}
-```
-
-#### Get Adherence Rate
-```bash
-GET /api/medications/{medication_id}/adherence?patient_id=...&days=7
-
-Response:
-{
-  "medication_id": "...",
-  "adherence_rate": 85.7,
-  "days": 7
-}
+Version 1/
+├── app/
+│   ├── main.py              # Flask app entry point
+│   ├── core/
+│   │   ├── config.py        # Environment configuration
+│   │   └── security.py      # AES-256-GCM encryption
+│   ├── database/
+│   │   ├── connection.py    # PostgreSQL connection manager
+│   │   └── router.py        # Sharding router
+│   ├── models/              # Pydantic data models
+│   ├── routers/             # Flask blueprints (API routes)
+│   └── services/
+│       ├── ocr_service.py           # Prescription OCR
+│       ├── semantic_parser.py       # Medical NER
+│       ├── notification_service.py  # WhatsApp/SMS alerts
+│       ├── digital_twin_service.py  # Health Digital Twin
+│       ├── clinical_summary_service.py  # Gemini AI summaries
+│       ├── maps_service.py          # Google Maps integration
+│       ├── scraper_service.py       # Hospital web scraper
+│       └── voice_service.py         # Twilio Voice
+├── tests/                   # Unit & integration tests
+├── .env.example             # Environment template
+├── requirements.txt         # Python dependencies
+└── README.md                # This file
 ```
 
 ---
 
-## 🎯 Phase 2 Acceptance Criteria
+## 🔒 Security Architecture
 
-- [x] **Handwriting Robustness**: Regex + fuzzy matching handles variations
-- [x] **Safety Confirmation**: UI-ready OCR output for user verification
-- [x] **Concurrency**: Individual medication tracking per patient
-- [x] **Inventory Accuracy**: Pills decremented only on TAKEN, not MISSED
-
----
-
-## 🔧 Celery Background Tasks
-
-### Setup
-```bash
-# Start Celery worker
-celery -A app.tasks.celery_tasks worker --loglevel=info
-
-# Start Celery Beat (scheduler)
-celery -A app.tasks.celery_tasks beat --loglevel=info
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Rate Limiter (100/min)                   │
+├─────────────────────────────────────────────────────────────┤
+│                      Flask REST API                          │
+├───────────┬───────────┬───────────┬───────────┬─────────────┤
+│  Patients │ Prescrip- │ Medica-   │  Digital  │  Hospitals  │
+│   Router  │   tions   │   tions   │   Twin    │   Router    │
+├───────────┴───────────┴───────────┴───────────┴─────────────┤
+│                    Services Layer                            │
+│  OCR │ NER │ Notifications │ Maps │ Scraper │ Voice │ AI    │
+├─────────────────────────────────────────────────────────────┤
+│  AES-256-GCM Encryption   │   SHA-256 Shard Router          │
+│  (Per-user key derivation)│   (hash(user_id) % num_shards)  │
+├─────────────────────────────────────────────────────────────┤
+│  PostgreSQL Shard 0       │   PostgreSQL Shard 1            │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-### Scheduled Tasks
-- **Inventory Monitor**: Runs hourly, checks refill thresholds
-- **Reminder Scheduler**: Runs daily, queues medication reminders
-- **Adherence Scores**: Runs weekly, calculates patient adherence
+---
+
+## 📋 Hackathon Checklist
+
+- [x] **Phase 0:** Problem-solution fit confirmed
+- [x] **Phase 1:** Sharded DB + encryption implemented
+- [x] **Phase 2:** OCR + Medical NER + inventory tracking
+- [x] **Phase 3:** Digital Twin + Gemini AI + Maps
+- [ ] **Phase 4:** Frontend (backend complete, UI pending)
 
 ---
 
-## 🎯 Next Steps (Phase 3)
-- [ ] Integration Testing (End-to-end OCR → Database → Notification)
-- [ ] UI/UX for prescription scanning
-- [ ] Push notifications for reminders
-- [ ] Geo-spatial pharmacy discovery
+## 🛡️ Hackathon Security Tips
 
+1. **Keep `.env` private** - Never share or commit
+2. **Use mock mode** for demos: `MOCK_MODE=true`
+3. **Rotate API keys** after the hackathon
+4. **Rate limiting** is enabled to prevent abuse
 
-## 📝 License
-Proprietary - Anokha 2026 Hackathon Project
+---
+
+## 📄 License
+
+MIT License - Built for MedTech Hackathon 2026
+
+---
+
+**Built with ❤️ for better patient outcomes**

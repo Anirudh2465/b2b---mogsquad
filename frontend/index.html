@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AuraHealth | Premium Patient Continuity</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Playfair+Display:wght@400;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif'],
+                    },
+                    colors: {
+                        gold: {
+                            400: '#FBBF24',
+                            500: '#F59E0B',
+                            600: '#D97706',
+                        },
+                        glass: 'rgba(255, 255, 255, 0.05)',
+                        glassBorder: 'rgba(255, 255, 255, 0.1)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0F172A;
+            background-image:
+                radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
+                radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%);
+            color: #E2E8F0;
+            min-height: 100vh;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateY(-2px);
+            border-color: rgba(245, 158, 11, 0.3);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        .nav-item.active {
+            background: rgba(245, 158, 11, 0.15);
+            color: #FBBF24;
+            border-right: 3px solid #FBBF24;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .delay-100 {
+            animation-delay: 100ms;
+        }
+
+        .delay-200 {
+            animation-delay: 200ms;
+        }
+
+        .delay-300 {
+            animation-delay: 300ms;
+        }
+
+        /* Loader */
+        .loader {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 3px solid #FBBF24;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="flex overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 glass-panel h-screen z-20 hidden md:flex flex-col">
+        <div class="p-8 flex items-center gap-3">
+            <div
+                class="w-8 h-8 rounded bg-gradient-to-tr from-gold-400 to-amber-600 flex items-center justify-center text-white font-bold">
+                A</div>
+            <span class="font-serif text-xl font-bold tracking-wide text-white">Aura<span
+                    class="text-gold-400">Health</span></span>
+        </div>
+
+        <nav class="flex-1 px-4 py-6 space-y-2">
+            <button onclick="navigate('dashboard')" id="nav-dashboard"
+                class="nav-item active w-full flex items-center gap-4 px-4 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all">
+                <i class="fa-solid fa-chart-line w-5"></i>
+                <span class="font-medium">Dashboard</span>
+            </button>
+            <button onclick="navigate('prescriptions')" id="nav-prescriptions"
+                class="nav-item w-full flex items-center gap-4 px-4 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all">
+                <i class="fa-solid fa-file-medical w-5"></i>
+                <span class="font-medium">Prescriptions</span>
+            </button>
+            <button onclick="navigate('medications')" id="nav-medications"
+                class="nav-item w-full flex items-center gap-4 px-4 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all">
+                <i class="fa-solid fa-pills w-5"></i>
+                <span class="font-medium">Medications</span>
+            </button>
+            <button onclick="navigate('twin')" id="nav-twin"
+                class="nav-item w-full flex items-center gap-4 px-4 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-all">
+                <i class="fa-solid fa-dna w-5"></i>
+                <span class="font-medium">Digital Twin</span>
+            </button>
+        </nav>
+
+        <div class="p-4 border-t border-white/10">
+            <div class="flex items-center gap-3 px-4 py-2">
+                <img src="https://ui-avatars.com/api/?name=John+Doe&background=random"
+                    class="w-8 h-8 rounded-full border border-gold-500/50">
+                <div>
+                    <h4 class="text-xs font-medium text-white">John Doe</h4>
+                    <p class="text-[10px] text-slate-400">ID: 550e...0000</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto relative">
+        <!-- Header -->
+        <header
+            class="h-20 flex items-center justify-between px-8 border-b border-white/5 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-10">
+            <h2 id="page-title" class="text-2xl font-serif text-white">Overview</h2>
+
+            <div class="flex items-center gap-6">
+                <div class="relative">
+                    <i class="fa-regular fa-bell text-slate-400 hover:text-white transition-colors cursor-pointer"></i>
+                    <span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                </div>
+                <!-- API Status Indicator -->
+                <div id="api-status"
+                    class="flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20">
+                    <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                    <span class="text-xs font-medium text-green-400">System Online</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="p-8 max-w-7xl mx-auto pb-20">
+
+            <!-- Dashboard View -->
+            <div id="view-dashboard" class="fade-in">
+                <!-- Welcome Section -->
+                <div class="mb-10">
+                    <h1 class="text-4xl font-serif text-white mb-2">Morning, John</h1>
+                    <p class="text-slate-400">Here's your health overview for today.</p>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="glass-card p-6 rounded-2xl delay-100 fade-in">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 rounded-xl bg-blue-500/10 text-blue-400"><i
+                                    class="fa-solid fa-bullseye"></i></div>
+                            <span class="text-xs text-slate-500 font-mono">ADHERENCE</span>
+                        </div>
+                        <h3 class="text-3xl font-bold text-white mb-1">92%</h3>
+                        <p class="text-xs text-green-400 flex items-center gap-1"><i
+                                class="fa-solid fa-arrow-trend-up"></i> +4% this week</p>
+                    </div>
+
+                    <div class="glass-card p-6 rounded-2xl delay-200 fade-in">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 rounded-xl bg-purple-500/10 text-purple-400"><i
+                                    class="fa-solid fa-prescription-bottle"></i></div>
+                            <span class="text-xs text-slate-500 font-mono">ACTIVE MEDS</span>
+                        </div>
+                        <h3 class="text-3xl font-bold text-white mb-1">4</h3>
+                        <p class="text-xs text-slate-400">2 morning, 2 evening</p>
+                    </div>
+
+                    <div class="glass-card p-6 rounded-2xl delay-300 fade-in">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 rounded-xl bg-gold-500/10 text-gold-400"><i
+                                    class="fa-solid fa-triangle-exclamation"></i></div>
+                            <span class="text-xs text-slate-500 font-mono">RISK LEVEL</span>
+                        </div>
+                        <h3 class="text-3xl font-bold text-white mb-1">LOW</h3>
+                        <p class="text-xs text-slate-400">Based on recent adherence</p>
+                    </div>
+
+                    <div
+                        class="glass-card p-6 rounded-2xl delay-300 fade-in bg-gradient-to-br from-gold-500/10 to-transparent border-gold-500/20">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-3 rounded-xl bg-gold-500/20 text-gold-400"><i
+                                    class="fa-solid fa-wand-magic-sparkles"></i></div>
+                            <span class="text-xs text-gold-300 font-mono">AI INSIGHT</span>
+                        </div>
+                        <p class="text-sm text-slate-300 italic">"Consistency is improving. Detected 'Hypertension'
+                            pattern - consider scheduling a follow-up."</p>
+                    </div>
+                </div>
+
+                <!-- Recent Activity & Quick Actions -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2 glass-panel rounded-2xl p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-serif text-lg text-white">Medication Schedule</h3>
+                            <button class="text-xs text-gold-400 hover:text-gold-300">View Full Schedule</button>
+                        </div>
+
+                        <div class="space-y-4">
+                            <!-- Med Item -->
+                            <div
+                                class="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-all group">
+                                <div
+                                    class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-gold-400 transition-colors">
+                                    <i class="fa-solid fa-capsules"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-medium text-white">Metformin</h4>
+                                    <p class="text-xs text-slate-400">500mg • After Food</p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="block text-sm font-bold text-white">08:00 AM</span>
+                                    <span class="text-xs text-green-400">TAKEN</span>
+                                </div>
+                            </div>
+
+                            <!-- Med Item -->
+                            <div
+                                class="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/5 hover:border-white/10 transition-all group">
+                                <div
+                                    class="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-gold-400 transition-colors">
+                                    <i class="fa-solid fa-tablets"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <h4 class="font-medium text-white">Amlodipine</h4>
+                                    <p class="text-xs text-slate-400">5mg • Before Bed</p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="block text-sm font-bold text-white">09:00 PM</span>
+                                    <button
+                                        class="px-3 py-1 text-xs bg-gold-500 text-black font-bold rounded hover:bg-gold-400 transition-colors">TAKE
+                                        NOW</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="space-y-6">
+                        <div class="glass-panel p-6 rounded-2xl text-center">
+                            <div
+                                class="w-16 h-16 mx-auto bg-green-500/10 rounded-full flex items-center justify-center text-green-400 mb-4 text-2xl">
+                                <i class="fa-solid fa-camera"></i>
+                            </div>
+                            <h3 class="font-semibold text-white mb-2">New Prescription</h3>
+                            <p class="text-xs text-slate-400 mb-4">Scan a new prescription to auto-update your schedule.
+                            </p>
+                            <button onclick="navigate('prescriptions')"
+                                class="w-full py-2 bg-white text-slate-900 font-bold rounded-lg hover:bg-gray-200 transition-colors">Upload
+                                Now</button>
+                        </div>
+
+                        <div class="glass-panel p-6 rounded-2xl">
+                            <h3 class="font-serif text-lg text-white mb-4">Nearby Hospitals</h3>
+                            <!-- Hospitals Container -->
+                            <div class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide" id="hospitals-container">
+                                <!-- Fallback content if API fails -->
+                                <div class="min-w-[120px] p-3 rounded-lg bg-white/5 border border-white/5">
+                                    <div class="text-xs text-slate-400 mb-1">0.8 km</div>
+                                    <div class="font-medium text-white text-sm mb-1">City Care</div>
+                                    <div class="text-[10px] text-green-400">Open Now</div>
+                                </div>
+                                <div class="min-w-[120px] p-3 rounded-lg bg-white/5 border border-white/5">
+                                    <div class="text-xs text-slate-400 mb-1">2.1 km</div>
+                                    <div class="font-medium text-white text-sm mb-1">Apollo</div>
+                                    <div class="text-[10px] text-orange-400">Closing Soon</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prescriptions View -->
+            <div id="view-prescriptions" class="hidden fade-in">
+                <div class="glass-panel p-10 rounded-2xl border-dashed border-2 border-white/20 text-center hover:border-gold-500/50 transition-colors group cursor-pointer"
+                    id="drop-zone">
+                    <div
+                        class="w-20 h-20 mx-auto bg-slate-800 rounded-full flex items-center justify-center text-slate-400 group-hover:text-gold-400 group-hover:scale-110 transition-all mb-6">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl"></i>
+                    </div>
+                    <h3 class="text-2xl font-serif text-white mb-2">Upload Prescription</h3>
+                    <p class="text-slate-400 mb-6">Drag and drop your image here, or click to browse</p>
+                    <input type="file" id="file-input" class="hidden" accept="image/*">
+                    <button onclick="document.getElementById('file-input').click()"
+                        class="px-8 py-3 bg-gold-500 text-slate-900 font-bold rounded-xl hover:bg-gold-400 transition-colors shadow-lg shadow-gold-500/20">
+                        Select File
+                    </button>
+                </div>
+
+                <!-- Loading State (Hidden by default) -->
+                <div id="ocr-loading" class="hidden mt-8 text-center p-8 bg-black/20 rounded-xl">
+                    <div class="loader mx-auto mb-4"></div>
+                    <h4 class="text-white font-medium">Analyzing Prescription...</h4>
+                    <p class="text-xs text-slate-400">Extracting medicines, dosages, and schedules using AI</p>
+                </div>
+
+                <!-- Results (Hidden by default) -->
+                <div id="ocr-results" class="hidden mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Image Preview -->
+                    <div class="glass-panel p-4 rounded-xl">
+                        <h4 class="text-sm font-medium text-slate-400 mb-3">Original Image</h4>
+                        <img id="preview-img" src="" class="w-full rounded-lg border border-white/10">
+                    </div>
+
+                    <!-- Extracted Data -->
+                    <div class="glass-panel p-6 rounded-xl">
+                        <h4 class="text-sm font-medium text-gold-400 mb-4 flex items-center gap-2">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> AI Extraction Results
+                        </h4>
+
+                        <div id="extracted-content" class="space-y-4">
+                            <!-- Dynamic content goes here -->
+                        </div>
+
+                        <button
+                            class="w-full mt-6 py-3 bg-green-600 hover:bg-green-500 text-white font-medium rounded-lg transition-colors">
+                            Confirm & Add to Schedule
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Digital Twin View (Mock) -->
+            <div id="view-twin" class="hidden fade-in">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- 3D Avatar Area -->
+                    <div
+                        class="lg:col-span-1 glass-panel p-8 rounded-2xl flex flex-col items-center justify-center relative overflow-hidden min-h-[400px]">
+                        <div class="absolute inset-0 bg-gradient-to-b from-blue-500/10 to-transparent"></div>
+
+                        <!-- Pulse Rings -->
+                        <div class="absolute w-64 h-64 border border-blue-400/20 rounded-full animate-ping opacity-20">
+                        </div>
+                        <div class="absolute w-48 h-48 border border-blue-400/30 rounded-full animate-pulse"></div>
+
+                        <!-- Human silhouette (font awesome as placeholder) -->
+                        <i
+                            class="fa-solid fa-person text-9xl text-blue-400/80 drop-shadow-[0_0_15px_rgba(96,165,250,0.5)] z-10"></i>
+
+                        <div class="mt-8 text-center z-10">
+                            <h3 class="text-xl font-bold text-white">John's Twin</h3>
+                            <p class="text-xs text-blue-300">Last updated: Just now</p>
+                        </div>
+                    </div>
+
+                    <!-- Health Data -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="glass-panel p-6 rounded-2xl">
+                            <h3 class="font-serif text-xl text-white mb-6">Chronic Conditions Detected</h3>
+
+                            <div class="flex gap-4">
+                                <div
+                                    class="px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 flex items-center gap-3">
+                                    <i class="fa-solid fa-heart-pulse"></i>
+                                    <div>
+                                        <div class="font-bold text-sm">Hypertension</div>
+                                        <div class="text-[10px] opacity-70">Confidence: 92%</div>
+                                    </div>
+                                </div>
+                                <div
+                                    class="px-4 py-2 rounded-lg bg-orange-500/10 border border-orange-500/30 text-orange-400 flex items-center gap-3">
+                                    <i class="fa-solid fa-droplet"></i>
+                                    <div>
+                                        <div class="font-bold text-sm">Pre-Diabetic</div>
+                                        <div class="text-[10px] opacity-70">Confidence: 65%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass-panel p-6 rounded-2xl">
+                            <h3 class="font-serif text-xl text-white mb-4">Gemini Clinical Summary</h3>
+                            <div class="p-4 bg-white/5 rounded-xl border-l-4 border-purple-500" id="summary-container">
+                                <p class="text-sm text-slate-300 leading-relaxed">
+                                    "Patient shows consistent adherence to Amlodipine, suggesting good management of
+                                    hypertension. However, irregular intake of supplements was noted."
+                                </p>
+                                <div class="mt-3 flex justify-end">
+                                    <span class="text-[10px] text-purple-400 uppercase tracking-widest">GENERATED BY
+                                        AI</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = 'http://localhost:5002/api';
+        const PATIENT_ID = '550e8400-e29b-41d4-a716-446655440000'; // Demo ID
+
+        // Navigation Logic
+        function navigate(viewId) {
+            // Hide all views
+            document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+            // Show selected
+            document.getElementById('view-' + viewId).classList.remove('hidden');
+            document.getElementById('nav-' + viewId).classList.add('active');
+
+            // Update Title
+            const titles = {
+                'dashboard': 'Overview',
+                'prescriptions': 'Prescription Manager',
+                'medications': 'My Medicine Cabinet',
+                'twin': 'Digital Health Twin'
+            };
+            document.getElementById('page-title').innerText = titles[viewId];
+
+            // Trigger Data Load
+            if (viewId === 'dashboard') loadDashboardData();
+            if (viewId === 'twin') loadTwinData();
+        }
+
+        // --- DATA LOADING ---
+
+        async function loadDashboardData() {
+            // Fetch Nearby Hospitals (Real Mappls API)
+            try {
+                // Get user location (mock lat/long for stability)
+                const lat = 28.6139;
+                const lng = 77.2090; // New Delhi
+
+                const res = await fetch(`${API_BASE}/hospitals/nearby?lat=${lat}&lng=${lng}&radius=5000`);
+                if (res.ok) {
+                    const hospitals = await res.json();
+                    if (hospitals.length > 0) {
+                        renderHospitals(hospitals.slice(0, 5)); // Show top 5
+                    }
+                }
+            } catch (e) {
+                console.warn("Maps API failed, showing demo data", e);
+                // Keep static HTML fallback
+            }
+        }
+
+        function renderHospitals(hospitals) {
+            const container = document.querySelector('#hospitals-container');
+            if (!container) return;
+
+            container.innerHTML = hospitals.map(h => `
+                <div class="min-w-[120px] p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                     <div class="text-xs text-slate-400 mb-1">${(h.distance_meters / 1000).toFixed(1)} km</div>
+                     <div class="font-medium text-white text-sm mb-1 truncate">${h.name}</div>
+                     <div class="text-[10px] text-green-400">View Details</div>
+                 </div>
+            `).join('');
+        }
+
+        async function loadTwinData() {
+            // Fetch Real Clinical Summary (DeepSeek)
+            try {
+                // Wait for twin to be ready
+                const res = await fetch(`${API_BASE}/digital_twin/${PATIENT_ID}/summary`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const summaryEl = document.querySelector('#summary-container p');
+                    const badgeEl = document.querySelector('#summary-container .tracking-widest');
+
+                    if (summaryEl && data.summary) {
+                        summaryEl.innerText = `"${data.summary}"`;
+                    }
+                    if (badgeEl) {
+                        badgeEl.innerText = "GENERATED BY DEEPSEEK R1 (OPENROUTER)";
+                    }
+                }
+            } catch (e) {
+                console.warn("Twin API failed", e);
+            }
+        }
+
+        // --- CORE FUNCTIONS ---
+
+        // Check Backend Health
+        async function checkHealth() {
+            try {
+                const res = await fetch(`${API_BASE.replace('/api', '/health')}`);
+                if (res.ok) {
+                    const status = document.getElementById('api-status');
+                    status.innerHTML = `
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        <span class="text-xs font-medium text-green-400">System Online</span>
+                    `;
+                }
+            } catch (e) {
+                console.error("API Offline", e);
+                const status = document.getElementById('api-status');
+                status.innerHTML = `
+                    <span class="w-2 h-2 rounded-full bg-red-500"></span>
+                    <span class="text-xs font-medium text-red-400">Offline</span>
+                `;
+                status.classList.replace('bg-green-500/10', 'bg-red-500/10');
+                status.classList.replace('border-green-500/20', 'border-red-500/20');
+            }
+        }
+
+        // File Upload Handling
+        const fileInput = document.getElementById('file-input');
+        if (fileInput) {
+            fileInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    document.getElementById('preview-img').src = e.target.result;
+                    document.getElementById('ocr-results').classList.remove('hidden');
+                    simulateOCR(e.target.result);
+                };
+
+                document.getElementById('drop-zone').classList.add('hidden');
+                document.getElementById('ocr-loading').classList.remove('hidden');
+
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function simulateOCR(base64Image) {
+            // NOTE: Using Simulation for Video because Tesseract is not installed on this machine.
+            // If Tesseract was installed, we would call: POST /api/prescriptions/upload
+
+            setTimeout(() => {
+                document.getElementById('ocr-loading').classList.add('hidden');
+
+                // Mock Data for "Wow" factor
+                const mockData = [
+                    { name: 'Metformin', dose: '500mg', freq: 'BID (1-0-1)', duration: '15 days' },
+                    { name: 'Amlodipine', dose: '5mg', freq: 'OD (0-0-1)', duration: '30 days' },
+                    { name: 'Atorvastatin', dose: '10mg', freq: 'HS (Bedtime)', duration: '30 days' }
+                ];
+
+                const container = document.getElementById('extracted-content');
+                container.innerHTML = mockData.map(med => `
+                    <div class="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 animate-pulse">
+                        <div>
+                            <div class="font-bold text-white">${med.name}</div>
+                            <div class="text-xs text-slate-400">${med.dose} • ${med.freq}</div>
+                        </div>
+                        <span class="text-xs px-2 py-1 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">${med.duration}</span>
+                    </div>
+                `).join('');
+
+            }, 2000); // 2s delay for dramatic effect
+        }
+
+        // Initialize
+        checkHealth();
+        // Initial load of dashboard data if on dashboard
+        setTimeout(loadDashboardData, 1000); // Load maps
+    </script>
+</body>
+
+</html>

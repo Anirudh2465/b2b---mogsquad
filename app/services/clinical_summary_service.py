@@ -28,14 +28,25 @@ class ClinicalSummaryService:
         self.api_key = api_key
         self.model_name = model_name
         
-        if not mock_mode and api_key:
+        if not mock_mode:
+            # Check for provider configuration
+            from app.core.config import get_config
+            config = get_config().get_api_key('gemini')
+            self.provider = config.get('provider', 'google')
+            
             try:
-                import google.generativeai as genai
-                genai.configure(api_key=api_key)
-                self.client = genai.GenerativeModel(model_name)
-                logger.info(f"✅ Google Gemini client initialized with model: {model_name}")
+                if self.provider == 'openrouter':
+                    self.api_key = config.get('api_key')
+                    self.model_name = config.get('model_name', 'deepseek/deepseek-r1')
+                    logger.info(f"✅ OpenRouter initialized with model: {self.model_name}")
+                else:
+                    # Google Gemini
+                    import google.generativeai as genai
+                    genai.configure(api_key=api_key or config.get('api_key'))
+                    self.client = genai.GenerativeModel(model_name)
+                    logger.info(f"✅ Google Gemini client initialized with model: {model_name}")
             except Exception as e:
-                logger.warning(f"⚠️  Failed to initialize Gemini: {e}. Using mock mode.")
+                logger.warning(f"⚠️  Failed to initialize LLM provider {self.provider}: {e}. Using mock mode.")
                 self.mock_mode = True
         else:
             logger.info("⚠️  Clinical Summary service in MOCK mode")
@@ -62,20 +73,50 @@ class ClinicalSummaryService:
         prompt = self._build_prompt(digital_twin, medication_history, max_words)
         
         try:
-            # Generate summary using Gemini
-            response = self.client.generate_content(
-                prompt,
-                generation_config={
-                    'temperature': 0.3,
-                    'max_output_tokens': 300,
-                    'top_p': 0.8,
-                    'top_k': 40
-                }
-            )
+            if hasattr(self, 'provider') and self.provider == 'openrouter':
+                # OpenRouter (DeepSeek) implementation using requests
+                import requests
+                import json
+                
+                response = requests.post(
+                    url="https://openrouter.ai/api/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json",
+                        "HTTP-Referer": "https://aurahealth.ai", # Required by OpenRouter
+                        "X-Title": "AuraHealth"
+                    },
+                    data=json.dumps({
+                        "model": self.model_name,
+                        "messages": [
+                            {"role": "system", "content": "You are a specialized medical assistant generating clinical summaries."},
+                            {"role": "user", "content": prompt}
+                        ],
+                        "temperature": 0.3,
+                        "max_tokens": 300
+                    })
+                )
+                
+                response.raise_for_status()
+                result = response.json()
+                summary = result['choices'][0]['message']['content'].strip()
+                logger.info(f"✅ Generated clinical summary via OpenRouter ({self.model_name})")
+                return summary
             
-            summary = response.text.strip()
-            logger.info(f"✅ Generated clinical summary via Gemini ({self.model_name})")
-            return summary
+            else:
+                # Gemini implementation
+                response = self.client.generate_content(
+                    prompt,
+                    generation_config={
+                        'temperature': 0.3,
+                        'max_output_tokens': 300,
+                        'top_p': 0.8,
+                        'top_k': 40
+                    }
+                )
+                summary = response.text.strip()
+                logger.info(f"✅ Generated clinical summary via Gemini ({self.model_name})")
+                return summary
             
         except Exception as e:
             logger.error(f"❌ LLM summary generation failed: {e}")

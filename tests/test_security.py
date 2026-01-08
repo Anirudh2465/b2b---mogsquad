@@ -1,31 +1,31 @@
 """
 Unit Tests for Security Infrastructure
-Tests Vault, Encryption, Sharding, and Rate Limiting
+Tests Config, Encryption, Sharding, and Rate Limiting
 """
 import unittest
 from uuid import uuid4
 
-from app.core.vault_client import VaultClient
+from app.core.config import ConfigManager
 from app.core.security import EncryptionManager
 from app.database.router import ShardRouter
 
 
-class TestVaultClient(unittest.TestCase):
-    """Test Vault client wrapper"""
+class TestConfigManager(unittest.TestCase):
+    """Test ConfigManager (replaced VaultClient)"""
     
     def setUp(self):
-        """Initialize mock Vault client"""
-        self.vault = VaultClient(mock_mode=True)
+        """Initialize ConfigManager"""
+        self.config = ConfigManager()
     
     def test_get_master_key(self):
         """Test fetching master encryption key"""
-        key = self.vault.get_master_encryption_key()
+        key = self.config.get_master_encryption_key()
         self.assertIsNotNone(key)
         self.assertIsInstance(key, str)
     
     def test_get_database_credentials(self):
         """Test fetching database credentials"""
-        creds = self.vault.get_database_credentials(0)
+        creds = self.config.get_database_credentials(0)
         self.assertIn('username', creds)
         self.assertIn('password', creds)
         self.assertIn('host', creds)
@@ -33,7 +33,7 @@ class TestVaultClient(unittest.TestCase):
     
     def test_get_api_key(self):
         """Test fetching API keys"""
-        twilio = self.vault.get_api_key('twilio')
+        twilio = self.config.get_api_key('twilio')
         self.assertIn('account_sid', twilio)
         self.assertIn('auth_token', twilio)
 

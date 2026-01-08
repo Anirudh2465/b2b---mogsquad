@@ -3,6 +3,7 @@ AuraHealth Flask Application
 Main entry point with security infrastructure initialization.
 """
 from flask import Flask, jsonify
+from flask_cors import CORS
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import logging
@@ -54,6 +55,7 @@ def create_app(mock_mode: bool = True) -> Flask:
         Configured Flask app
     """
     app = Flask(__name__)
+    CORS(app)  # Enable CORS for all routes
     
     # ===== SECURITY INITIALIZATION =====
     logger.info("🚀 Initializing AuraHealth Security Infrastructure...")
@@ -178,14 +180,14 @@ def create_app(mock_mode: bool = True) -> Flask:
 
 
 if __name__ == '__main__':
-    # Check if we should run in mock mode
-    mock_mode = os.getenv("MOCK_MODE", "true").lower() == "true"
+    # Check if we should run in mock mode (Default to FALSE for production feel)
+    mock_mode = os.getenv("MOCK_MODE", "false").lower() == "true"
     
     app = create_app(mock_mode=mock_mode)
     
     # Run development server
     app.run(
         host='0.0.0.0',
-        port=5000,
+        port=5002,
         debug=True
     )

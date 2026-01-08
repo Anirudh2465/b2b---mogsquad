@@ -25,13 +25,24 @@ class MapsService:
         self.mock_mode = mock_mode
         self.api_key = api_key
         
-        if not mock_mode and api_key:
+        # Check provider from config
+        if not mock_mode:
+            from app.core.config import get_config
+            config = get_config().get_api_key('google_maps')
+            self.provider = config.get('provider', 'google')
+            
             try:
-                import googlemaps
-                self.client = googlemaps.Client(key=api_key)
-                logger.info("✅ Google Maps client initialized")
+                if self.provider == 'mappls':
+                    self.api_key = config.get('api_key')
+                    self.client_id = config.get('client_id')
+                    self.client_secret = config.get('client_secret')
+                    logger.info("✅ Mappls/MapMyIndia client configured")
+                elif api_key:
+                    import googlemaps
+                    self.client = googlemaps.Client(key=api_key)
+                    logger.info("✅ Google Maps client initialized")
             except Exception as e:
-                logger.warning(f"⚠️  Failed to initialize Maps: {e}. Using mock mode.")
+                logger.warning(f"⚠️  Failed to initialize Maps provider {self.provider}: {e}. Using mock mode.")
                 self.mock_mode = True
         else:
             logger.info("⚠️  Maps service in MOCK mode")
@@ -57,6 +68,9 @@ class MapsService:
             return self._get_mock_hospitals(latitude, longitude)
         
         try:
+            if hasattr(self, 'provider') and self.provider == 'mappls':
+                return self._search_mappls(latitude, longitude, radius_meters, max_results)
+            
             # Use Places API (New) - Nearby Search
             import requests
             
@@ -101,6 +115,71 @@ class MapsService:
         except Exception as e:
             logger.error(f"❌ Maps API error: {e}")
             return self._get_mock_hospitals(latitude, longitude)
+
+    def _get_mappls_token(self) -> str:
+        """Get OAuth token for Mappls"""
+        import requests
+        
+        token_url = "https://outpost.mapmyindia.com/api/security/oauth/token"
+        response = requests.post(token_url, data={
+            "grant_type": "client_credentials",
+            "client_id": self.client_id,
+            "client_secret": self.client_secret
+        })
+        response.raise_for_status()
+        return response.json()['access_token']
+
+    def _search_mappls(self, latitude: float, longitude: float, radius: int, max_results: int) -> List[HospitalData]:
+        """Search using Mappls (MapMyIndia) API"""
+        import requests
+        
+        try:
+            token = self._get_mappls_token()
+            
+            # Mappls Nearby Search API
+            # Format: https://atlas.mapmyindia.com/api/places/nearby/json?keywords=hospital&refLocation=lat,lng
+            url = "https://atlas.mapmyindia.com/api/places/nearby/json"
+            
+            params = {
+                "keywords": "hospital",
+                "refLocation": f"{latitude},{longitude}",
+                "radius": min(radius, 10000) # Mappls limits might exist
+            }
+            
+            headers = {"Authorization": f"Bearer {token}"}
+            
+            response = requests.get(url, params=params, headers=headers)
+            response.raise_for_status()
+            
+            data = response.json()
+            hospitals = []
+            
+            for place in data.get('suggestedLocations', []):
+                # Map Mappls response to HospitalData
+                hospital = HospitalData(
+                    place_id=place.get('eLoc', str(place.get('placeAddress', ''))),
+                    name=place.get('placeName', 'Unknown'),
+                    formatted_address=place.get('placeAddress', ''),
+                    latitude=place.get('latitude', latitude),
+                    longitude=place.get('longitude', longitude),
+                    distance_meters=place.get('distance', 0),
+                    phone_number=None, # Extra call needed usually
+                    website=None,
+                    rating=4.0, # Placeholder
+                    user_ratings_total=0,
+                    opd_timings=None,
+                    departments=[],
+                    emergency_number=None,
+                    bed_availability=None,
+                    visited_before=False
+                )
+                hospitals.append(hospital)
+                
+            return hospitals[:max_results]
+            
+        except Exception as e:
+            logger.error(f"❌ Mappls API error: {e}")
+            raise e
     
     def _calculate_distance(self, lat1: float, lon1: float, lat2: float, lon2: float) -> float:
         """

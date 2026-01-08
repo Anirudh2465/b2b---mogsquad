@@ -38,12 +38,23 @@ class ConfigManager:
     def get_api_key(service: str) -> Dict[str, str]:
         """Get API keys for services"""
         if service == 'gemini':
+            # Support both native Gemini and OpenRouter (for DeepSeek)
             return {
-                "api_key": os.getenv("GEMINI_API_KEY"),
-                "model_name": os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+                "api_key": os.getenv("OPENROUTER_API_KEY") or os.getenv("GEMINI_API_KEY"),
+                "model_name": os.getenv("OPENROUTER_MODEL") or os.getenv("GEMINI_MODEL", "gemini-1.5-flash"),
+                "provider": "openrouter" if os.getenv("OPENROUTER_API_KEY") else "google"
             }
         elif service == 'google_maps':
+            # Support Mappls/Ola Maps if keys exist
+            if os.getenv("MAPPLS_API_KEY"):
+                return {
+                    "provider": "mappls",
+                    "api_key": os.getenv("MAPPLS_API_KEY"),
+                    "client_id": os.getenv("MAPPLS_CLIENT_ID"),
+                    "client_secret": os.getenv("MAPPLS_CLIENT_SECRET")
+                }
             return {
+                "provider": "google",
                 "api_key": os.getenv("GOOGLE_MAPS_API_KEY")
             }
         elif service == 'twilio':
@@ -53,6 +64,7 @@ class ConfigManager:
                 "phone_number": os.getenv("TWILIO_PHONE_NUMBER")
             }
         return {}
+
 
 # Global instance for compatibility
 config = ConfigManager()

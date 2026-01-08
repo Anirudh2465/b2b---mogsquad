@@ -122,8 +122,8 @@ class TestSecurityVerification(unittest.TestCase):
         """Test AES-256-GCM encryption roundtrip"""
         from app.core.security import EncryptionManager
         
-        # Mock master key
-        master_key = b'0' * 32  # 32 bytes for AES-256
+        # Mock master key (must be string, not bytes)
+        master_key = '0' * 32  # 32 char string for AES-256
         encryption = EncryptionManager(master_key)
         
         plaintext = "Sensitive patient data"
