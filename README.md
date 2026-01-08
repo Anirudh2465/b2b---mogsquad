@@ -175,11 +175,190 @@ vault kv put database/shard0 \
   database=aurahealth_shard0
 ```
 
-## 🎯 Next Steps (Phase 2)
-- [ ] OCR Integration (Prescription scanning)
-- [ ] Digital Twin Engine (Health trend tracking)
-- [ ] Notification System (WhatsApp/SMS reminders)
-- [ ] Geo-spatial Hospital Discovery
+
+---
+
+## 🚀 Phase 2: OCR & Intelligence Layer ✅
+
+### Features Implemented
+
+#### 1. **Vision-AI Pipeline**
+- OpenCV preprocessing (noise reduction, deskewing, CLAHE, adaptive thresholding)
+- Tesseract OCR with layout-aware extraction
+- Regex-based structured data extraction
+
+#### 2. **Semantic Parser**
+- 30+ medical abbreviation mappings (QD, BID, TID, 1-0-1, etc.)
+- Automatic inventory calculation
+- Dosage extraction from text
+
+#### 3. **Predictive Inventory Engine**
+- Real-time pill counter
+- Adherence event tracking (TAKEN, MISSED, WASTAGE, REFILL)
+- Automated refill alerts
+- Adherence rate calculation
+
+#### 4. **Procurement Bridge**
+- WhatsApp deep link generation
+- Twilio SMS integration (with mock mode)
+- Automated pharmacy communication
+
+---
+
+## 📡 Phase 2 API Endpoints
+
+### Prescription Management
+
+#### Upload & OCR
+```bash
+POST /api/prescriptions/upload
+Content-Type: application/json
+
+{
+  "patient_id": "550e8400-e29b-41d4-a716-446655440000",
+  "image": "<base64-encoded-image>"
+}
+```
+
+#### Confirm OCR Results
+```bash
+POST /api/prescriptions/{prescription_id}/confirm
+Content-Type: application/json
+
+{
+  "patient_id": "...",
+  "medications": [
+    {
+      "drug_name": "Paracetamol",
+      "strength": "500mg",
+      "frequency": "BID",
+      "duration_days": 10,
+      "dosage_per_intake": 1
+    }
+  ],
+  "pharmacy_name": "ABC Pharmacy",
+  "pharmacy_phone": "9876543210"
+}
+```
+
+### Medication Adherence
+
+#### List Medications
+```bash
+GET /api/medications/?patient_id=...
+```
+
+#### Mark as Taken
+```bash
+POST /api/medications/{medication_id}/taken
+Content-Type: application/json
+
+{
+  "patient_id": "...",
+  "scheduled_time": "2026-01-08T09:00:00",
+  "pills_count": 1
+}
+```
+
+#### Mark as Missed
+```bash
+POST /api/medications/{medication_id}/missed
+Content-Type: application/json
+
+{
+  "patient_id": "...",
+  "scheduled_time": "2026-01-08T09:00:00"
+}
+```
+
+#### Record Wastage
+```bash
+POST /api/medications/{medication_id}/wastage
+Content-Type: application/json
+
+{
+  "patient_id": "...",
+  "pills_count": 2
+}
+```
+
+#### Record Refill
+```bash
+POST /api/medications/{medication_id}/refill
+Content-Type: application/json
+
+{
+  "patient_id": "...",
+  "pills_count": 30
+}
+```
+
+#### Get Refill Alerts
+```bash
+GET /api/medications/refill-alerts?patient_id=...
+
+Response:
+{
+  "count": 2,
+  "medications": [
+    {
+      "medication_id": "...",
+      "drug_name": "Aspirin",
+      "pills_remaining": 3,
+      "whatsapp_url": "https://wa.me/...",
+      "pills_needed": 27
+    }
+  ]
+}
+```
+
+#### Get Adherence Rate
+```bash
+GET /api/medications/{medication_id}/adherence?patient_id=...&days=7
+
+Response:
+{
+  "medication_id": "...",
+  "adherence_rate": 85.7,
+  "days": 7
+}
+```
+
+---
+
+## 🎯 Phase 2 Acceptance Criteria
+
+- [x] **Handwriting Robustness**: Regex + fuzzy matching handles variations
+- [x] **Safety Confirmation**: UI-ready OCR output for user verification
+- [x] **Concurrency**: Individual medication tracking per patient
+- [x] **Inventory Accuracy**: Pills decremented only on TAKEN, not MISSED
+
+---
+
+## 🔧 Celery Background Tasks
+
+### Setup
+```bash
+# Start Celery worker
+celery -A app.tasks.celery_tasks worker --loglevel=info
+
+# Start Celery Beat (scheduler)
+celery -A app.tasks.celery_tasks beat --loglevel=info
+```
+
+### Scheduled Tasks
+- **Inventory Monitor**: Runs hourly, checks refill thresholds
+- **Reminder Scheduler**: Runs daily, queues medication reminders
+- **Adherence Scores**: Runs weekly, calculates patient adherence
+
+---
+
+## 🎯 Next Steps (Phase 3)
+- [ ] Integration Testing (End-to-end OCR → Database → Notification)
+- [ ] UI/UX for prescription scanning
+- [ ] Push notifications for reminders
+- [ ] Geo-spatial pharmacy discovery
+
 
 ## 📝 License
 Proprietary - Anokha 2026 Hackathon Project

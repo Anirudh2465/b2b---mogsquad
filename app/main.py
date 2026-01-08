@@ -7,18 +7,33 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import logging
 import os
+from dotenv import load_dotenv
+
+# Load env vars before anything else
+load_dotenv()
 
 # Import core modules
-from app.core.vault_client import init_vault, get_vault
 from app.core.security import init_encryption
 from app.database.router import init_shard_router
 from app.database.connection import init_database_manager, get_db_manager
 
 # Import services
 from app.services.patient_service import PatientService
+from app.services.inventory_service import InventoryService
+from app.services.ocr_service import init_ocr_service
+from app.services.notification_service import init_notification_service
+from app.services.digital_twin_service import init_digital_twin_service
+from app.services.clinical_summary_service import init_clinical_summary_service
+from app.services.maps_service import init_maps_service
+from app.services.scraper_service import init_scraper_service
+from app.services.voice_service import init_voice_service
 
 # Import routers
 from app.routers.patient_router import patient_bp, init_patient_router
+from app.routers.prescription_router import prescription_bp
+from app.routers.medication_router import medication_bp, init_medication_router
+from app.routers.digital_twin_router import twin_bp
+from app.routers.hospital_router import hospital_bp
 
 # Configure logging
 logging.basicConfig(
@@ -43,26 +58,27 @@ def create_app(mock_mode: bool = True) -> Flask:
     # ===== SECURITY INITIALIZATION =====
     logger.info("🚀 Initializing AuraHealth Security Infrastructure...")
     
-    # 1. Initialize Vault
-    vault = init_vault(mock_mode=mock_mode)
-    logger.info("✅ Vault initialized")
-    
-    # 2. Initialize Encryption with master key from Vault
-    master_key = vault.get_master_encryption_key()
+    # Initialize simple config manager
+    from app.core.config import get_config
+    config = get_config()
+
+    # Initialize encryption
+    # Using simple env var key instead of Vault
+    master_key = config.get_master_encryption_key()
     init_encryption(master_key)
-    logger.info("✅ AES-256-GCM encryption initialized")
-    
-    # 3. Initialize Shard Router
+    logger.info("✅ Encryption initialized")
+
+    # Initialize shard router
     init_shard_router(num_shards=2)
     logger.info("✅ Database shard router initialized")
-    
-    # 4. Initialize Database Connections
+
+    # Initialize database connection manager
     db_manager = init_database_manager()
     
+    # Configure database shards
     if not mock_mode:
-        # Connect to real shards using Vault credentials
         for shard_id in [0, 1]:
-            creds = vault.get_database_credentials(shard_id)
+            creds = config.get_database_credentials(shard_id)
             db_manager.add_shard(
                 shard_id=shard_id,
                 host=creds['host'],
@@ -71,8 +87,9 @@ def create_app(mock_mode: bool = True) -> Flask:
                 username=creds['username'],
                 password=creds['password']
             )
+        logger.info("✅ Database shards configured (PRODUCTION mode)")
     else:
-        logger.info("⚠️  MOCK MODE: Skipping real database connections")
+        logger.info("⚠️  Database in MOCK mode (No connection)")
     
     # 5. Initialize Rate Limiter with Redis
     limiter = Limiter(
@@ -88,8 +105,41 @@ def create_app(mock_mode: bool = True) -> Flask:
     patient_service = PatientService()
     init_patient_router(patient_service)
     
+    # Phase 2 services
+    ocr_service = init_ocr_service()
+    notification_service = init_notification_service(mock_mode=mock_mode)
+    inventory_service = InventoryService()
+    init_medication_router(inventory_service)
+    
+    # Phase 3 services
+    digital_twin_service = init_digital_twin_service()
+    
+    # Clinical summary with Gemini
+    gemini_config = config.get_api_key('gemini')
+    clinical_summary_service = init_clinical_summary_service(
+        mock_mode=mock_mode,
+        api_key=gemini_config.get('api_key') if not mock_mode else None,
+        model_name=gemini_config.get('model_name', 'gemini-1.5-flash')
+    )
+    
+    # Maps and other services
+    maps_config = config.get_api_key('google_maps')
+    maps_service = init_maps_service(
+        mock_mode=mock_mode, 
+        api_key=maps_config.get('api_key') if not mock_mode else None
+    )
+    
+    scraper_service = init_scraper_service(mock_mode=mock_mode)
+    voice_service = init_voice_service(mock_mode=mock_mode)
+    
+    logger.info("✅ Phase 2 & 3 services initialized")
+    
     # ===== REGISTER BLUEPRINTS =====
     app.register_blueprint(patient_bp)
+    app.register_blueprint(prescription_bp)
+    app.register_blueprint(medication_bp)
+    app.register_blueprint(twin_bp)
+    app.register_blueprint(hospital_bp)
     
     # ===== GLOBAL ERROR HANDLERS =====
     @app.errorhandler(429)
