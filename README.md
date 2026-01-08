@@ -2,7 +2,13 @@
 
 > **MedTech Hackathon 2026** | Smart Medication Adherence Platform
 
-## 🎯 Problem Statement
+## � Demo Video
+
+**Watch the full demonstration:** [https://vimeo.com/1152630189/e222ad2b94](https://vimeo.com/1152630189/e222ad2b94)
+
+---
+
+## �🎯 Problem Statement
 
 Patients face a **"Data Black Hole"** between clinic and home:
 - Complex medication schedules lead to poor adherence
