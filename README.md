@@ -40,7 +40,7 @@ Server: `http://localhost:5000`
 
 - **Gemini AI**: https://aistudio.google.com/app/apikey
 - **Google Maps**: https://console.cloud.google.com/apis/credentials  
-- **Twilio** (optional): https://console.twilio.com
+- **Twilio** : https://console.twilio.com
 
 Add to `.env` file. Set `MOCK_MODE=true` to run without API keys.
 
